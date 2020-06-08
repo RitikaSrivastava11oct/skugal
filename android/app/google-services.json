@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "663566886651",
+    "firebase_url": "https://skugal-cf763.firebaseio.com",
+    "project_id": "skugal-cf763",
+    "storage_bucket": "skugal-cf763.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:663566886651:android:f54de844a3fe5d86d2325e",
+        "android_client_info": {
+          "package_name": "com.skugal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "663566886651-tf51fco7nniuis903gl9do3qbjok1nch.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-zGCBsxegxcMuNRMZy-cjLRRsgubwhRQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "663566886651-tf51fco7nniuis903gl9do3qbjok1nch.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
