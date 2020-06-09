@@ -151,6 +151,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+            release {
+                storeFile file('skugal.keystore')
+                storePassword 'skugal'
+                keyAlias 'skugal'
+                keyPassword 'skugal'
+                }
     }
     buildTypes {
         debug {

@@ -3,6 +3,7 @@ import { styles } from '../utility/style';
 import { Icon ,SearchBar ,ListItem } from 'react-native-elements';
 import { Text, View,Button,FlatList, ScrollView} from 'react-native';
 import { HomeApi } from './HomeApi';
+import { Loading} from './LoadingComponent';
 
 class HomeComponent extends Component{
     constructor(props){
@@ -10,7 +11,8 @@ class HomeComponent extends Component{
         this.state={
             search : '',
             searchView : false,
-            quizzes:''
+            quizzes:'',
+            loading : true
         }
     }
 
@@ -18,18 +20,17 @@ class HomeComponent extends Component{
         try {
             let response = await HomeApi.fetchData();
             if(response.result)
-                this.setState({quizzes : response.data});
-                console.log('quizzes', this.state.quizzes);
-        } catch (error) {
-            console.log('error while fetching data in Home Component', error);
+               await this.setState({quizzes : response.data,
+            loading : false});
+        } 
+        
+        catch (error) {
             throw error;
         }
     }
-    updateSearch = value=> {
-        
+    updateSearch = value=> { 
         this.setState({ search: value ,
             searchView: true});
-            console.log('update search',this.state.searchView);
     };
     clearSearch = ()=> {
         this.setState({ search: '' ,
@@ -39,22 +40,20 @@ class HomeComponent extends Component{
     render(){
 
         const renderQuiz = ({item, index}) => {
-            console.log('hhh');
-            return (
+            if(item.quiz.title && item.quiz.description)
+                return (
                     <ListItem
                         key={index}
-                        title={item.title}
+                        title={item.quiz.title?item.quiz.title:''}
                         style={{ color : '#ffffff'}}
-                        subtitle={item.description}
-                        // hideChevron={true}
-                        onPress={() => navigate('Dishdetail', { dishId: item.id })}
-                        // leftAvatar={{ source: {uri: baseUrl + item.image}}}
+                        subtitle={item.quiz.description?item.quiz.description:''}
+                        onPress={() => alert(item.quiz.description)}
                         />
-
-            );
+                );
         };
         
         return(
+            this.state.loading?(<Loading/>):(
             <View style={styles.MainContainer}>
                 <SearchBar
                     rightIconContainerStyle={{backgroundColor :'#151B54',search: '' }}
@@ -67,15 +66,14 @@ class HomeComponent extends Component{
                 />
                 {this.state.searchView ? (<View>
                     <ScrollView>
-                        <Text style= {{ color : '#ffffff'}}>
-                            hiiii
-                        </Text>
-                        <FlatList 
-                        // data={this.state.quizzes.filter(quiz => ( quiz.type === this.state.search))}
-                        data={this.state.quizzes}
-                        renderItem={renderQuiz}
-                        keyExtractor={item => item.id.toString()}
-                        />
+                        <View style = {{ width : '100%'}}> 
+                            <FlatList 
+                            data={this.state.quizzes.filter(quiz => ( quiz.quiz.title == this.state.search))}
+                            renderItem={renderQuiz}
+                            keyExtractor={item => item.id?item.id.toString():''}
+                            />
+                        </View>
+
                     </ScrollView>
 
                 </View>): 
@@ -263,6 +261,7 @@ class HomeComponent extends Component{
                 </View>
                 )}
             </View>
+            )
         );
     }
 }
