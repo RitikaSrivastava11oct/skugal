@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { styles } from '../utility/style';
 import { Icon ,SearchBar ,ListItem } from 'react-native-elements';
-import { Text, View,Button,FlatList, ScrollView} from 'react-native';
+import { Text, View,Button,FlatList, ScrollView,Image} from 'react-native';
 import { HomeApi } from './HomeApi';
 import { Loading} from './LoadingComponent';
 
@@ -12,15 +12,28 @@ class HomeComponent extends Component{
             search : '',
             searchView : false,
             quizzes:'',
+            allQuizzes: '',
             loading : true
         }
     }
 
+    GetSortOrder(prop) {    
+        return function(a, b) {    
+            if (a[prop] > b[prop]) {    
+                return 1;    
+            } else if (a[prop] < b[prop]) {    
+                return -1;    
+            }    
+            return 0;    
+        }    
+    } 
+
     async componentDidMount(){
         try {
             let response = await HomeApi.fetchData();
-            if(response.result)
-               await this.setState({quizzes : response.data,
+            console.log('in home',response);
+            if(response.result){}
+               await this.setState({quizzes : response.data, allQuizzes : response.allQuizzes,
             loading : false});
         } 
         
@@ -37,7 +50,58 @@ class HomeComponent extends Component{
             searchView: false});
     };
 
+    updateCount=(id)=>{
+        var item = this.state.allQuizzes.find(quiz => quiz.id == id);
+        if (item) {
+        item.count = item.count+1;
+        }
+        //  const len=state.dishes.length;
+        //    action.payload.id=len;
+        //     return {...state, isLoading: false, errMess: null, dishes: state.dishes.concat(action.payload)};
+        
+        this.state.allQuizzes.sort(this.GetSortOrder("count")); 
+        var top5=[];
+        for(var i=0;i<5;i++){
+            top5.push(this.state.allQuizzes[i]);
+        }   
+        console.log('top 5',top5);
+        this.setState({
+            quizzes: top5
+        });
+
+
+    }
+
     render(){
+
+        const renderTop5Quiz = ({item, index}) => {
+            if(item.quiz.title && item.quiz.description)
+                return (
+                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
+                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
+                            <Image
+                            source ={{ uri: item.quiz.imageUrl }}/>
+                            <View style ={{ marginLeft : 10}}>
+                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
+                                    {item.quiz.title}
+                                </Text>
+                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
+                                {item.count} times
+                                </Text>
+                            </View>
+
+                        </View>
+                        <View style= {{justifyContent : 'flex-end'}}>
+                            <Button
+                                title ="use"
+                                color = '#87CEEB'
+                                onPress={()=> {this.updateCount(item.id)}}
+
+                            />
+                        </View>
+                    </View>
+                );
+        };
 
         const renderQuiz = ({item, index}) => {
             if(item.quiz.title && item.quiz.description)
@@ -51,9 +115,10 @@ class HomeComponent extends Component{
                         />
                 );
         };
+
         
         return(
-            this.state.loading?(<Loading/>):(
+            
             <View style={styles.MainContainer}>
                 <SearchBar
                     rightIconContainerStyle={{backgroundColor :'#151B54',search: '' }}
@@ -64,7 +129,8 @@ class HomeComponent extends Component{
                     onChangeText={(value)=>this.updateSearch(value)}
                     value={this.state.search}
                 />
-                {this.state.searchView ? (<View>
+                {this.state.loading?(<Loading/>):(
+                this.state.searchView ? (<View>
                     <ScrollView>
                         <View style = {{ width : '100%'}}> 
                             <FlatList 
@@ -77,192 +143,31 @@ class HomeComponent extends Component{
                     </ScrollView>
 
                 </View>): 
-                (
-                <View>
-                    <View style={{flexDirection : 'row' , justifyContent : 'space-between',paddingTop: 30}}>
-                        <Text style ={{ fontSize : 16, color: '#ffffff',fontWeight : 'bold'}}>
-                            Recent use
-                        </Text>
-                        <Text style ={{ fontSize : 14 , color : '#FFC0CB'}}>
-                            Clear History
-                        </Text>
-                    </View>
-
-                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
-                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Icon
-                                name ='html5'
-                                type = 'font-awesome'
-                                color='#FFFF00'
-                                size= {39}
-                            />
-                            <View style ={{ marginLeft : 10}}>
-                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
-                                    Html 5
-                                </Text>
-                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                    120 Times
-                                </Text>
-                            </View>
-
-                        </View>
-                        <View style= {{justifyContent : 'flex-end'}}>
-                            <Button
-                                title ="use"
-                                color = '#87CEEB'
-                            />
-                        </View>
-                    </View>
-
-                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
-                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Icon
-                                name ='vuejs'
-                                type = 'font-awesome'
-                                color='#228B22'
-                                size= {39}
-                            />
-                            <View style ={{ marginLeft : 10}}>
-                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
-                                    Vue Javascript
-                                </Text>
-                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                    120 Times
-                                </Text>
-                            </View>
-
-                        </View>
-                        <View style= {{justifyContent : 'flex-end'}}>
-                            <Button
-                                title ="use"
-                                color = '#87CEEB'
-                            />
-                        </View>
-                    </View>
-
-                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
-                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Icon
-                                name ='css3'
-                                type = 'font-awesome'
-                                color='#0000FF'
-                                size= {39}
-                            />
-                            <View style ={{ marginLeft : 10}}>
-                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
-                                    CSS
-                                </Text>
-                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                    120 Times
-                                </Text>
-                            </View>
-
-                        </View>
-                        <View style= {{justifyContent : 'flex-end'}}>
-                            <Button
-                                title ="use"
-                                color = '#87CEEB'
-                                
-                            />
-                        </View>
-                    </View>
-
+                (<View>
                     <View style={{flexDirection : 'row' , justifyContent : 'space-between',marginTop: 40}}>
                         <Text style ={{ fontSize : 16, color: '#ffffff',fontWeight : 'bold'}}>
-                            Popular weapon
+                            Popular Quizzes
                         </Text>
                         <Text style ={{ fontSize : 14 , color : '#808080'}}>
-                            4 weapon
+                            5 Quizzes
                         </Text>
                     </View>
 
-                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 30}}>
-                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Icon
-                                name ='angular'
-                                type = 'font-awesome'
-                                color='#FF0000'
-                                size= {39}
-                            />
-                            <View style ={{ marginLeft : 10}}>
-                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
-                                    Angular Javascript
-                                </Text>
-                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                    2120 Times
-                                </Text>
-                            </View>
-
-                        </View>
-                        <View style= {{justifyContent : 'flex-end'}}>
-                            <Button
-                                outline
-                                title ="use"
-                                color = '#87CEEB'
+                    <ScrollView>
+                        <View style = {{ width : '100%'}}> 
+                            <FlatList 
+                             data={this.state.quizzes}
+                            // data={this.state.quizzes.filter(quiz => ( quiz.quiz.title == this.state.search))}
+                            renderItem={renderTop5Quiz}
+                            keyExtractor={item => item.id?item.id.toString():''}
                             />
                         </View>
-                    </View>
 
-                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
-                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Icon
-                                name ='react'
-                                type = 'font-awesome'
-                                color='#808080'
-                                size= {39}
-                            />
-                            <View style ={{ marginLeft : 10}}>
-                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
-                                    Vue Javascript
-                                </Text>
-                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                2090 Times
-                                </Text>
-                            </View>
-
-                        </View>
-                        <View style= {{justifyContent : 'flex-end'}}>
-                            <Button
-                                title ="use"
-                                color = '#87CEEB'
-                                type = 'outline'
-                            />
-                        </View>
-                    </View>
-
-                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
-                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Icon
-                                name ='js-square'
-                                type = 'font-awesome5'
-                                color='#FFFF00'
-                                size= {39}
-                            />
-                            <View style ={{ marginLeft : 10}}>
-                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
-                                    React Javascript
-                                </Text>
-                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                    1891 Times
-                                </Text>
-                            </View>
-
-                        </View>
-                        <View style= {{justifyContent : 'flex-end'}}>
-                            <Button
-                            
-                                title ="use"
-                                color = '#87CEEB'
-                                type = 'outline'
-                            />
-                        </View>
-                    </View>
-
-                </View>
+                    </ScrollView>
+                </View>)
                 )}
             </View>
-            )
-        );
+          )
     }
 }
  export default HomeComponent;
