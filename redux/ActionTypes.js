@@ -1,3 +1,4 @@
 export const QUIZZES_LOADING = 'QUIZZES_LOADING';
 export const ADD_QUIZZES = 'ADD_QUIZZES';
 export const QUIZZES_FAILED = 'QUIZZES_FAILED';
+export const UPDATE_QUIZ='UPDATE_QUIZ'

@@ -1,9 +1,8 @@
 import {createStore, combineReducers, applyMiddleware} from 'redux';
 import thunk from 'redux-thunk';
 import logger from 'redux-logger';
-import { dishes } from './dishes';
+import { quizzes } from './quizzes';
 import { persistStore, persistCombineReducers } from 'redux-persist';
-// import AsyncStorage from '@react-native-community/async-storage';
 import { AsyncStorage } from 'react-native';
 
 const config = {
@@ -15,7 +14,7 @@ const config = {
 export const ConfigureStore  = () => {
     const store = createStore(
         persistCombineReducers(config, {
-            dishes
+            quizzes
         }),
         applyMiddleware(thunk , logger)
     );

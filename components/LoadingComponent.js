@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
       flex: 1
     },
     loadingText: {
-      color: '#ffffff',
+      color: '#00008B',
       fontSize: 14,
       fontWeight: 'bold'
     }
@@ -17,7 +17,7 @@ const styles = StyleSheet.create({
 export const Loading = () => {
     return(
         <View style={styles.loadingView} >
-            <ActivityIndicator size="large" color="#ffffff" />
+            <ActivityIndicator size="large" color="#00008B" />
             <Text style={styles.loadingText} >Loading . . .</Text>
         </View>
     );

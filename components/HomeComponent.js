@@ -1,9 +1,21 @@
 import React, { Component } from 'react';
 import { styles } from '../utility/style';
-import { Icon ,SearchBar ,ListItem } from 'react-native-elements';
-import { Text, View,Button,FlatList, ScrollView,Image} from 'react-native';
-import { HomeApi } from './HomeApi';
+import { Icon,SearchBar ,ListItem } from 'react-native-elements';
+import { Text, View,Button,FlatList, ScrollView,Image,Modal} from 'react-native';
 import { Loading} from './LoadingComponent';
+import { connect } from 'react-redux';
+import { fetchQuizzes ,updateQuiz} from '../redux/ActionCreators';
+
+const mapStateToProps = state => {
+     return {
+        quizzes: state.quizzes
+    }
+}
+
+const mapDispatchToProps = dispatch => ({
+    fetchQuizzes: () => dispatch(fetchQuizzes()),
+    updateQuiz : (itemId) => dispatch(updateQuiz(itemId))
+})
 
 class HomeComponent extends Component{
     constructor(props){
@@ -11,36 +23,34 @@ class HomeComponent extends Component{
         this.state={
             search : '',
             searchView : false,
-            quizzes:'',
-            allQuizzes: '',
-            loading : true
+            showModal: false,
+            quiz:''
         }
     }
 
-    GetSortOrder(prop) {    
-        return function(a, b) {    
-            if (a[prop] > b[prop]) {    
-                return 1;    
-            } else if (a[prop] < b[prop]) {    
-                return -1;    
-            }    
-            return 0;    
-        }    
-    } 
-
     async componentDidMount(){
         try {
-            let response = await HomeApi.fetchData();
-            console.log('in home',response);
-            if(response.result){}
-               await this.setState({quizzes : response.data, allQuizzes : response.allQuizzes,
-            loading : false});
+            await this.props.fetchQuizzes();
+            console.log('quizzes',this.props.quizzes.quizzes);
+             this.props.quizzes.quizzes.sort(this.GetSortOrder("count"));
         } 
         
         catch (error) {
             throw error;
         }
     }
+
+    GetSortOrder(prop) {    
+        return function(a, b) {    
+            if (a[prop] < b[prop]) {    
+                return 1;    
+            } else if (a[prop] > b[prop]) {    
+                return -1;    
+            }    
+            return 0;    
+        }    
+    } 
+
     updateSearch = value=> { 
         this.setState({ search: value ,
             searchView: true});
@@ -50,53 +60,63 @@ class HomeComponent extends Component{
             searchView: false});
     };
 
-    updateCount=(id)=>{
-        var item = this.state.allQuizzes.find(quiz => quiz.id == id);
-        if (item) {
-        item.count = item.count+1;
-        }
-        //  const len=state.dishes.length;
-        //    action.payload.id=len;
-        //     return {...state, isLoading: false, errMess: null, dishes: state.dishes.concat(action.payload)};
-        
-        this.state.allQuizzes.sort(this.GetSortOrder("count")); 
-        var top5=[];
-        for(var i=0;i<5;i++){
-            top5.push(this.state.allQuizzes[i]);
-        }   
-        console.log('top 5',top5);
+    closeModal() {
         this.setState({
-            quizzes: top5
+            showModal: false
         });
-
-
     }
 
     render(){
+        this.props.quizzes.quizzes.sort(this.GetSortOrder("count"));
 
         const renderTop5Quiz = ({item, index}) => {
             if(item.quiz.title && item.quiz.description)
                 return (
                     <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
                         <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
-                            <Image
-                            source ={{ uri: item.quiz.imageUrl }}/>
+                            <Image style={{ width : 30 ,height : 30}}
+                                    source={{uri:item.quiz.imageUrl}}/>
                             <View style ={{ marginLeft : 10}}>
                                 <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
                                     {item.quiz.title}
                                 </Text>
                                 <Text style ={{ fontSize : 12 , color : '#808080'}}>
-                                {item.count} times
+                                    {item.count} times
                                 </Text>
                             </View>
-
                         </View>
                         <View style= {{justifyContent : 'flex-end'}}>
                             <Button
                                 title ="use"
                                 color = '#87CEEB'
-                                onPress={()=> {this.updateCount(item.id)}}
+                                onPress={()=> {this.props.updateQuiz(item.id);
+                                }}
+                            />
+                        </View>
+                    </View>
+                );
+        };
 
+        const renderRecentQuiz = ({item, index}) => {
+            if(item.quiz.title && item.quiz.description)
+                return (
+                    <View style={{flexDirection : 'row', justifyContent : 'space-between' , marginTop : 20}}>
+                        <View style={{ flexDirection : 'row',justifyContent : 'flex-start'}}>
+                            <Image style={{ width : 30 ,height : 30}}
+                                    source={{uri:item.quiz.imageUrl}}/>
+                            <View style ={{ marginLeft : 10}}>
+                                <Text style ={{ marginBottom: 5,fontSize : 14 , color:'#ffffff'}}>
+                                    {item.quiz.title}
+                                </Text>
+                                <Text style ={{ fontSize : 12 , color : '#808080'}}>
+                                    {item.rating?item.rating:0} rating
+                                </Text>
+                            </View>
+                        </View>
+                        <View style= {{justifyContent : 'flex-end'}}>
+                            <Button
+                                title ="use"
+                                color = '#87CEEB'
                             />
                         </View>
                     </View>
@@ -111,15 +131,32 @@ class HomeComponent extends Component{
                         title={item.quiz.title?item.quiz.title:''}
                         style={{ color : '#ffffff'}}
                         subtitle={item.quiz.description?item.quiz.description:''}
-                        onPress={() => alert(item.quiz.description)}
+                        onPress={() => this.setState({quiz : item,showModal : !this.state.showModal})}
+
                         />
                 );
         };
-
-        
+        if (this.props.quizzes.isLoading) {
+            return(
+                <Loading />
+            );
+        }
+        else
         return(
-            
             <View style={styles.MainContainer}>
+                <View style={{flexDirection : 'row', justifyContent:'space-between',marginBottom : 40}}>
+                    <Text style={{ fontSize : 25,color: '#ffffff'}}>
+                        Quizzes
+                    </Text>
+
+                    <Icon
+                        name='html5'
+                        type='font-awesome'
+                        size={24}
+                        color='#ffffff'
+                    />
+                </View>
+
                 <SearchBar
                     rightIconContainerStyle={{backgroundColor :'#151B54',search: '' }}
                     placeholder="Search weapon here"
@@ -129,45 +166,90 @@ class HomeComponent extends Component{
                     onChangeText={(value)=>this.updateSearch(value)}
                     value={this.state.search}
                 />
-                {this.state.loading?(<Loading/>):(
-                this.state.searchView ? (<View>
+                
+                {this.state.searchView ? (<View>
                     <ScrollView>
-                        <View style = {{ width : '100%'}}> 
+                        <View style = {{ width : '100%'}}>
                             <FlatList 
-                            data={this.state.quizzes.filter(quiz => ( quiz.quiz.title == this.state.search))}
-                            renderItem={renderQuiz}
-                            keyExtractor={item => item.id?item.id.toString():''}
+                            data={this.props.quizzes.quizzes.filter(quiz => ( quiz.quiz.title.includes(this.state.search)))}
+                                renderItem={renderQuiz}
+                                keyExtractor={item => item.id?item.id.toString():''}
                             />
                         </View>
+                            <Modal  transparent={false} visible={this.state.showModal}>
+                           
+                                        <View style={{ padding :20 ,width : '100%' , backgroundColor: '#ffe6e3'}}>
+                                            <View style={styles.topRight}>
+                                                <Icon
+                                                    name='close'
+                                                    type='font-awesome'
+                                                    size={26}
+                                                    onPress={() => { this.closeModal() }}
+                                                    color='red' />
+                                            </View>
+                                            <Image style={{ height : 200 , width : '100%' }}
+                                            source={{uri:this.state.quiz!=''?this.state.quiz.quiz.imageUrl:''}}/>
+                                            <View style={{ marginTop: 50 ,backgroundColor: '#ffe6e3'}}  >
+                                                
+                                                <Text style={{fontSize: 20 ,fontWeight : 'bold', color:'#00008B'}}> {this.state.quiz!=''?this.state.quiz.quiz.title:''}</Text>
+                                                <Text style={{fontSize: 18 }}> {this.state.quiz!=''?this.state.quiz.quiz.description:''}</Text>
+                                                <Text style={{fontSize: 18 }}> {this.state.quiz!=''?this.state.quiz.quiz.type:''}</Text>
+                                                <Text style={{fontSize: 18 }}> {this.state.quiz!=''?this.state.quiz.count:''} times</Text>
+                                                <Text style={{fontSize: 18 }}> {this.state.quiz!=''?this.state.quiz.quiz.rating:''} times</Text>
 
+                                            </View>
+                                        </View>
+                            </Modal>
+                        
                     </ScrollView>
 
                 </View>): 
                 (<View>
-                    <View style={{flexDirection : 'row' , justifyContent : 'space-between',marginTop: 40}}>
-                        <Text style ={{ fontSize : 16, color: '#ffffff',fontWeight : 'bold'}}>
-                            Popular Quizzes
-                        </Text>
-                        <Text style ={{ fontSize : 14 , color : '#808080'}}>
-                            5 Quizzes
-                        </Text>
-                    </View>
-
                     <ScrollView>
+                        <View>
+                        <View style={{flexDirection : 'row' , justifyContent : 'space-between',marginTop: 40}}>
+                            <Text style ={{ fontSize : 16, color: '#ffffff',fontWeight : 'bold'}}>
+                                Popular Quizzes
+                            </Text>
+                            <Text style ={{ fontSize : 14 , color : '#808080'}}>
+                                5 Quizzes
+                            </Text>
+                        </View>
+
+                    
                         <View style = {{ width : '100%'}}> 
                             <FlatList 
-                             data={this.state.quizzes}
-                            // data={this.state.quizzes.filter(quiz => ( quiz.quiz.title == this.state.search))}
+                             data={this.props.quizzes.quizzes.slice(0,5)}
+                             maxToRenderPerBatch={5}
                             renderItem={renderTop5Quiz}
                             keyExtractor={item => item.id?item.id.toString():''}
                             />
                         </View>
 
+                        <View style={{flexDirection : 'row' , justifyContent : 'space-between',marginTop: 40}}>
+                            <Text style ={{ fontSize : 16, color: '#ffffff',fontWeight : 'bold'}}>
+                                Recent Quizzes
+                            </Text>
+                            <Text style ={{ fontSize : 14 , color : '#808080'}}>
+                                Recently Used
+                            </Text>
+                        </View>
+
+                    
+                        <View style = {{ width : '100%'}}> 
+                            <FlatList 
+                             data={this.props.quizzes.quizzes.slice(0,5)}
+                             maxToRenderPerBatch={5}
+                            renderItem={renderRecentQuiz}
+                            keyExtractor={item => item.id?item.id.toString():''}
+                            />
+                        </View>
+                        </View>
                     </ScrollView>
                 </View>)
-                )}
+                }
             </View>
           )
     }
 }
- export default HomeComponent;
+ export default connect(mapStateToProps, mapDispatchToProps)(HomeComponent);

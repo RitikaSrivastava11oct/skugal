@@ -8,6 +8,11 @@ export const styles = StyleSheet.create(
             backgroundColor : '#020546',
             padding : 20
             
+        },
+        topRight: {
+            position: 'absolute',
+            top: 3,
+            right: 3
         }
     }
 );
